@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. 数据库服务
+  db:
+    image: mysql:8.0
+    container_name: demo-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: demodb
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demopass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Python 后端服务
+  backend:
+    build: ./backend
+    container_name: demo-backend
+    ports:
+      - "5000:5000"          # ← Python Flask 默认 5000 端口
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - FLASK_ENV=development
+    restart: unless-stopped
+
+  # 3. 前端服务
+  frontend:
+    build: ./frontend
+    container_name: demo-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
