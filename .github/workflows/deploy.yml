@@ -40,10 +40,8 @@ jobs:
       - name: Build Docker images
         run: |
           docker compose -f docker-compose.yml build
-          # 查看构建出来的镜像名，确认正确
-          docker images
-          # 保存镜像（用实际构建出来的名字）
-          docker save python-fullstack-demo-backend python-fullstack-demo-frontend python-fullstack-demo-nginx -o images.tar
+          # 只保存实际构建出来的两个镜像
+          docker save python-fullstack-demo-backend python-fullstack-demo-frontend -o images.tar
 
       - name: Copy images to server
         uses: appleboy/scp-action@v0.1.7
