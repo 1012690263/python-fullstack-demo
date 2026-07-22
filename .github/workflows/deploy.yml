@@ -37,13 +37,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 构建镜像并导出（注意：docker compose，不是 docker-compose）
       - name: Build Docker images
         run: |
           docker compose -f docker-compose.yml build
-          docker save demo-backend demo-frontend demo-nginx -o images.tar
+          # 查看构建出来的镜像名，确认正确
+          docker images
+          # 保存镜像（用实际构建出来的名字）
+          docker save python-fullstack-demo-backend python-fullstack-demo-frontend python-fullstack-demo-nginx -o images.tar
 
-      # 上传镜像到服务器
       - name: Copy images to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -54,7 +55,6 @@ jobs:
           source: "images.tar,docker-compose.yml,init.sql"
           target: "/opt/demo"
 
-      # SSH 到服务器执行部署
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -65,8 +65,8 @@ jobs:
           script: |
             cd /opt/demo
             docker load -i images.tar
-            docker compose down        # ← 这里也要改！
-            docker compose up -d       # ← 这里也要改！
+            docker compose down
+            docker compose up -d
             docker image prune -f
             rm -f images.tar
             echo "✅ Deployed successfully!"
